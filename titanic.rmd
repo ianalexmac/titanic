@@ -6,11 +6,22 @@ output: pdf_document
 editor_options: 
   chunk_output_type: console
 ---
+### install packages
+```{r}
+#install.packages('rattle')
+#install.packages('rpart.plot')
+#install.packages('RColorBrewer')
+
+```
+
 
 
 ### libraries
 ```{r}
-library()
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
 
 ```
 
@@ -106,4 +117,12 @@ test$Survived[test$Sex == 'female' & test$Pclass == 3 & test$Fare >= 20] <- 0
 submit <- data.frame(PassengerId = test$PassengerId, Survived = test$Survived)
 write.csv(submit, file = "exp.3rd.f.perish.csv", row.names = FALSE)
 
+```
+
+
+### decision trees
+```{r}
+fit <- rpart(Survived ~ Pclass + Sex + Fare + Age + Parch + Embarked, data = train, method = "class")
+
+plot(fit)
 ```
