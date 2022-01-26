@@ -122,7 +122,7 @@ write.csv(submit, file = "exp.3rd.f.perish.csv", row.names = FALSE)
 
 ### decision tree
 write submission
-Kaggle:
+Kaggle: .78469 accurate
 ```{r}
 fit <- rpart(Survived ~ Pclass + Sex + Fare + Age + Parch + Embarked, data = train, method = "class")
 
