@@ -120,9 +120,19 @@ write.csv(submit, file = "exp.3rd.f.perish.csv", row.names = FALSE)
 ```
 
 
-### decision trees
+### decision tree
+write submission
+Kaggle:
 ```{r}
 fit <- rpart(Survived ~ Pclass + Sex + Fare + Age + Parch + Embarked, data = train, method = "class")
 
-plot(fit)
+fancyRpartPlot(fit)
+
+prediction <- predict(fit, test, type = "class")
+submit <- data.frame(PassengerId = test$PassengerId, Survived = prediction)
+write.csv(submit, file = "tree.csv", row.names = FALSE)
+
+
+
+
 ```
