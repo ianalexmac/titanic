@@ -93,6 +93,11 @@ train$FareCost[train$Fare < 30 & train$Fare >= 20] <- '$$$'
 train$FareCost[train$Fare < 20 & train$Fare >= 10] <- '$$'
 train$FareCost[train$Fare < 10] <- '$'
 
+test$FareCost <- '$$$$'
+test$FareCost[test$Fare < 30 & test$Fare >= 20] <- '$$$'
+test$FareCost[test$Fare < 20 & test$Fare >= 10] <- '$$'
+test$FareCost[test$Fare < 10] <- '$'
+
 ```
 
 
@@ -133,6 +138,35 @@ submit <- data.frame(PassengerId = test$PassengerId, Survived = prediction)
 write.csv(submit, file = "tree.csv", row.names = FALSE)
 
 
+```
 
+### random forest preparation
+cannot handle NA's, have 263 in Age
+use decision tree to fill values
+```{r}
+test$Survived <- NA
+full <- rbind(train, test)
+full$Name <- as.character(full$Name)
+
+summary(full)
+
+age.predict <- rpart(Age ~ Pclass + Sex + Parch + Fare + Embarked,
+                     data = full[!is.na(full$Age),],
+                     method = "anova")
+
+full$Age[is.na(full$Age)] <- predict(age.predict, full[is.na(full$Age),])
+
+summary(full)
+
+```
+
+
+### clean Embarked
+```{r}
+full$Embarked <- as.factor(full$Embarked)
+summary(full$Embarked)
+which(full$Embarked == '')
+full$Embarked[c(62, 830)] = "S"
+summary(full$Embarked)
 
 ```
