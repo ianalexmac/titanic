@@ -11,6 +11,9 @@ editor_options:
 #install.packages('rattle')
 #install.packages('rpart.plot')
 #install.packages('RColorBrewer')
+#install.packages("randomForest")
+#install.packages("party")
+
 
 ```
 
@@ -22,6 +25,8 @@ library(rpart)
 library(rattle)
 library(rpart.plot)
 library(RColorBrewer)
+library(randomForest)
+library(party)
 
 ```
 
@@ -50,6 +55,10 @@ class.3.fare <- median(test$Fare[test$Pclass == 3], na.rm = TRUE)
 test$Fare <- ifelse(is.na(test$Fare), class.3.fare, test$Fare)
 
 summary(test)
+
+train$Sex <- as.factor(train$Sex)
+test$Sex <- as.factor(test$Sex)
+
 ```
 
 ### clean NA's from Age
@@ -113,7 +122,7 @@ aggregate(Survived ~ Pclass + FareCost + Sex, data = train, FUN = function(x) {s
 
 ### make another submission
 prediction: females survived, except 3rd class females with expensive tickets
-Kaggle: .7799 accuracy
+Kaggle: .7727  accuracy
 ```{r}
 test$Survived <- 0
 test$Survived[test$Sex == 'female'] <- 1
@@ -127,7 +136,7 @@ write.csv(submit, file = "exp.3rd.f.perish.csv", row.names = FALSE)
 
 ### decision tree
 write submission
-Kaggle: .78469 accurate
+Kaggle: .7703 accuracy
 ```{r}
 fit <- rpart(Survived ~ Pclass + Sex + Fare + Age + Parch + Embarked, data = train, method = "class")
 
@@ -161,12 +170,71 @@ summary(full)
 ```
 
 
-### clean Embarked
+### clean blanks in Embarked
 ```{r}
 full$Embarked <- as.factor(full$Embarked)
 summary(full$Embarked)
 which(full$Embarked == '')
 full$Embarked[c(62, 830)] = "S"
 summary(full$Embarked)
+
+```
+
+
+###split full back into train and test
+```{r}
+train <- full[1:891,]
+test <- full[892:1309,]
+
+
+```
+
+### random forest
+```{r}
+set.seed(666)
+
+fit <- randomForest(as.factor(Survived) ~ Pclass + Sex + Age + Fare + Embarked,
+                    data = train,
+                    importance = TRUE,
+                    ntree = 2000)
+
+varImpPlot(fit)
+```
+
+
+### random forest submission
+Kaggle: .7823 accuracy! 
+```{r}
+prediction <- predict(fit, test)
+submit <- data.frame(PassengerId = test$PassengerId, Survived = prediction)
+write.csv(submit, file = "forest.csv", row.names = FALSE)
+
+```
+
+
+### conditional inference trees (party mode)
+```{r}
+library(party)
+set.seed(666)
+
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+               data = train,
+               controls = cforest_unbiased(ntree = 2000, mtry = 3))
+
+fit <- cforest(as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare +
+                                       Embarked,
+                 data = train, 
+                 controls = cforest_unbiased(ntree = 2000, mtry = 3))
+
+```
+
+### conditional forest submission
+Kaggle: .7847 accurate
+```{r}
+prediction <- predict(fit, newdata = test, OOB=TRUE, type = "response")
+
+submit <- data.frame(PassengerId = test$PassengerId, Survived = prediction)
+write.csv(submit, file = "cond.forest.csv", row.names = FALSE)
+
 
 ```
