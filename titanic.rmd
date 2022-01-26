@@ -1,0 +1,78 @@
+---
+title: "titanic"
+author: "ianalexmac"
+date: "1/26/2022"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+### libraries
+```{r}
+library()
+
+```
+
+### import
+```{r}
+test  <- read.csv("~/R/titanic/test.csv")
+train <- read.csv("~/R/titanic/train.csv")
+
+```
+
+### explore
+```{r}
+summary(test)
+summary(train)
+
+str(test)
+str(train)
+
+prop.table(table(train$Survived))
+```
+
+### test$Fare NA (row 153)
+add using median fare of 3rd class passengers
+```{r}
+class.3.fare <- median(test$Fare[test$Pclass == 3], na.rm = TRUE)
+test$Fare <- ifelse(is.na(test$Fare), class.3.fare, test$Fare)
+
+summary(test)
+```
+
+### clean NA's from Age
+lots of NA's in age (86 in test, 177 in train)
+make seperate data frames omitting Age rows with NA's
+```{r}
+a <- which(is.na(test$Age))
+test.no.na <- test[-a,]
+sum(is.na(test.no.na))
+
+b <- which(is.na(train))
+train.no.na <- train[-b,]
+sum(is.na(test.no.na))
+
+```
+
+### explore proportion of male/female survivors
+```{r}
+prop.table(table(train$Sex, train$Survived), 1)
+
+```
+
+
+### create submission dataframe for Kaggle
+prediction: females live, males die
+.7655 accuracy on Kaggle!
+```{r}
+test$Survived <- 0
+test$Survived[test$Sex == 'female'] <- 1
+
+submit <- data.frame(PassengerId = test$PassengerId, Survived = test$Survived)
+
+write.csv(submit, file = "females.survive.csv", row.names = FALSE)
+
+```
+
+
